@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "discord-webhook-node": "^1.1.8",
+    "dotenv": "^10.0.0",
     "web3": "^1.6.1"
   }
 }
