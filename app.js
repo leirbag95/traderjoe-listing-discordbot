@@ -11,37 +11,35 @@ const addresses = require('./assets/addresses.json')
 
 var axios = require('axios');
 
-var lastBlock = 0
-
-var config = {
-  method: 'get',
-  url: `${process.env.ALEPH_ENDPOINT}/cache/get/${process.env.ALEPH_KEY}`
-};
-
-
-axios(config)
-.then(function (response) {
-    lastBlock = response.data
-    if (!lastBlock) lastBlock = 0
-    console.log(lastBlock)
-})
-.catch(function (error) {
-  console.log(error);
-});
-  
 
 async function tracer() {
+    var lastBlock = 0
+
+    var config = {
+    method: 'get',
+    url: `${process.env.ALEPH_ENDPOINT}/cache/get/${process.env.ALEPH_KEY}`
+    };
+
+
+    await axios(config)
+    .then(function (response) {
+        lastBlock = response.data
+        if (!lastBlock) lastBlock = 0
+    })
+    .catch(function (error) {
+        console.log(error);
+    });
+    
     const JoeFactoryContract = new web3.eth.Contract(abis.JoeFactory, addresses.JoeFactory)
     
     await JoeFactoryContract.getPastEvents('PairCreated', { // Using an array means OR: e.g. 20 or 23
-        fromBlock: parseInt(lastBlock),
+        fromBlock: lastBlock,
         toBlock: 'latest'
     })
     .then( (events) => {
+        
         events.forEach(async element => {
-            console.log("enter")
             lastBlock = element.blockNumber
-            console.log(element.blockNumber)
 
             const tokenA = new web3.eth.Contract(abis.ERC20, element.returnValues.token1)
             const tokenB = new web3.eth.Contract(abis.ERC20, element.returnValues.token0)
@@ -61,21 +59,17 @@ async function tracer() {
             .setFooter(`Transaction ${tx}`)
             hook.send(embed)
 
-            // var setLastBlock = {
-            //     method: 'get',
-            //     url: `${process.env.ALEPH_ENDPOINT}/cache/set/${process.env.ALEPH_KEY}/${lastBlock}`
-            // };
+            var setLastBlock = {
+                method: 'get',
+                url: `${process.env.ALEPH_ENDPOINT}/cache/set/${process.env.ALEPH_KEY}/${lastBlock + 1}`
+            };
 
-            // await axios(setLastBlock)
-            // .then(function (response) {
-            //     lastBlock = response.data
-            // })
-            // .catch(function (error) {
-            //     console.log(error);
-            // });
+            await axios(setLastBlock)
+            .catch(function (error) {
+                console.log(error);
+            });
         });
     })
-    
 }
 
 tracer()
