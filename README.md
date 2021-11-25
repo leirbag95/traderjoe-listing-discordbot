@@ -63,4 +63,4 @@ For running it once
 node app.js
 ``` 
 
-For calling it every secondes set your own crontab.
+For calling it every seconds set your own crontab.
